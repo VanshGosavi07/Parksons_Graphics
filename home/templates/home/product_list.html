@@ -1,0 +1,126 @@
+{% extends 'home/base.html' %}
+
+{% block title %}Products - Warehouse Inventory{% endblock %}
+{% block page_title %}Products{% endblock %}
+
+{% block page_actions %}
+    <a href="{% url 'add_product' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Add New Product
+    </a>
+{% endblock %}
+
+{% block content %}
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0"><i class="bi bi-box-seam"></i> All Products</h5>
+        </div>
+        <div class="card-body">
+            {% if products_with_stock %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Product Name</th>
+                                <th>SKU</th>
+                                <th>Description</th>
+                                <th>Current Stock</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in products_with_stock %}
+                                {% with product=item.product stock=item.current_stock %}
+                                <tr class="{% if stock <= 0 %}table-danger{% elif stock <= 5 %}table-warning{% endif %}">
+                                    <td>
+                                        <strong>{{ product.name }}</strong>
+                                    </td>
+                                    <td><code>{{ product.sku }}</code></td>
+                                    <td>
+                                        {% if product.description %}
+                                            {{ product.description|truncatechars:60 }}
+                                        {% else %}
+                                            <span class="text-muted">No description</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if stock <= 0 %}bg-danger{% elif stock <= 5 %}bg-warning text-dark{% else %}bg-success{% endif %} fs-6">
+                                            {{ stock }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if stock <= 0 %}
+                                            <span class="text-danger">
+                                                <i class="bi bi-x-circle"></i> Out of Stock
+                                            </span>
+                                        {% elif stock <= 5 %}
+                                            <span class="text-warning">
+                                                <i class="bi bi-exclamation-triangle"></i> Low Stock
+                                            </span>
+                                        {% else %}
+                                            <span class="text-success">
+                                                <i class="bi bi-check-circle"></i> In Stock
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ product.created_at|date:"M d, Y" }}</small>
+                                    </td>
+                                </tr>
+                                {% endwith %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Summary -->
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <div class="alert alert-info">
+                            <div class="row text-center">
+                                <div class="col-md-3">
+                                    <strong>Total Products:</strong><br>
+                                    <span class="h4">{{ products_with_stock|length }}</span>
+                                </div>
+                                <div class="col-md-3">
+                                    <strong>In Stock:</strong><br>
+                                    <span class="h4 text-success">
+                                        {% for item in products_with_stock %}
+                                            {% if item.current_stock > 5 %}1{% else %}0{% endif %}
+                                        {% empty %}0{% endfor %}
+                                    </span>
+                                </div>
+                                <div class="col-md-3">
+                                    <strong>Low Stock:</strong><br>
+                                    <span class="h4 text-warning">
+                                        {% for item in products_with_stock %}
+                                            {% if item.current_stock > 0 and item.current_stock <= 5 %}1{% else %}0{% endif %}
+                                        {% empty %}0{% endfor %}
+                                    </span>
+                                </div>
+                                <div class="col-md-3">
+                                    <strong>Out of Stock:</strong><br>
+                                    <span class="h4 text-danger">
+                                        {% for item in products_with_stock %}
+                                            {% if item.current_stock <= 0 %}1{% else %}0{% endif %}
+                                        {% empty %}0{% endfor %}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-box display-1 text-muted"></i>
+                    <h4 class="mt-3">No Products Available</h4>
+                    <p class="text-muted">You haven't added any products to your inventory yet.</p>
+                    <a href="{% url 'add_product' %}" class="btn btn-primary btn-lg">
+                        <i class="bi bi-plus-circle"></i> Add Your First Product
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

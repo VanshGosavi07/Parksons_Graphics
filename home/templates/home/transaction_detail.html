@@ -1,0 +1,144 @@
+{% extends 'home/base.html' %}
+
+{% block title %}Transaction Detail - Warehouse Inventory{% endblock %}
+{% block page_title %}Transaction Details{% endblock %}
+
+{% block page_actions %}
+    <a href="{% url 'transaction_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Back to Transactions
+    </a>
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        {% if transaction.type == 'IN' %}
+                            <span class="badge bg-success me-2">
+                                <i class="bi bi-arrow-down"></i> Stock In
+                            </span>
+                        {% else %}
+                            <span class="badge bg-danger me-2">
+                                <i class="bi bi-arrow-up"></i> Stock Out
+                            </span>
+                        {% endif %}
+                        Transaction #{{ transaction.id }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6><i class="bi bi-calendar"></i> Date & Time</h6>
+                            <p>{{ transaction.date|date:"F d, Y" }} at {{ transaction.date|date:"H:i A" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="bi bi-hash"></i> Total Items</h6>
+                            <p><span class="badge bg-secondary fs-6">{{ transaction.get_total_items }}</span></p>
+                        </div>
+                    </div>
+
+                    {% if transaction.remarks %}
+                        <div class="mb-4">
+                            <h6><i class="bi bi-card-text"></i> Remarks</h6>
+                            <div class="alert alert-light">{{ transaction.remarks }}</div>
+                        </div>
+                    {% endif %}
+
+                    <h6><i class="bi bi-box-seam"></i> Products</h6>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>SKU</th>
+                                    <th>Quantity</th>
+                                    <th>Current Stock</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for detail in details %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ detail.product.name }}</strong>
+                                        {% if detail.product.description %}
+                                            <br><small class="text-muted">{{ detail.product.description|truncatechars:60 }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td><code>{{ detail.product.sku }}</code></td>
+                                    <td>
+                                        {% if transaction.type == 'IN' %}
+                                            <span class="text-success">+{{ detail.quantity }}</span>
+                                        {% else %}
+                                            <span class="text-danger">-{{ detail.quantity }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% with stock=detail.product.get_current_stock %}
+                                            <span class="badge {% if stock <= 0 %}bg-danger{% elif stock <= 5 %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                                                {{ stock }}
+                                            </span>
+                                        {% endwith %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- Transaction Info -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0"><i class="bi bi-info-circle"></i> Transaction Info</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Transaction ID:</strong><br>
+                        <code>#{{ transaction.id }}</code>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Type:</strong><br>
+                        {% if transaction.type == 'IN' %}
+                            <span class="badge bg-success">Stock In</span>
+                        {% else %}
+                            <span class="badge bg-danger">Stock Out</span>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Created:</strong><br>
+                        {{ transaction.created_at|date:"M d, Y H:i A" }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Products Affected:</strong><br>
+                        {{ details.count }} product{{ details.count|pluralize }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Related Actions -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="card-title mb-0"><i class="bi bi-lightning"></i> Quick Actions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'add_transaction' %}" class="btn btn-primary btn-sm">
+                            <i class="bi bi-plus-square"></i> New Transaction
+                        </a>
+                        <a href="{% url 'inventory_report' %}" class="btn btn-outline-info btn-sm">
+                            <i class="bi bi-clipboard-data"></i> View Inventory
+                        </a>
+                        <a href="{% url 'product_list' %}" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-box-seam"></i> View Products
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
